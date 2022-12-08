@@ -12,7 +12,7 @@ import 'package:http/http.dart' as http;
 class UserService with ServiceMixin {
   final Storage _storage = Storage.instance;
 
-  Future<ResponseModel> loginUser(Map<String, String> data, String role) async {
+  Future<ResponseModel> loginUser(Map<String, String> data) async {
     var request = http.MultipartRequest('POST', Uri.parse(login));
     request.fields.addAll(data);
     http.StreamedResponse response = await request.send();
@@ -22,7 +22,7 @@ class UserService with ServiceMixin {
         final jsonData = jsonDecode(res);
         if (jsonData["status"] == 200) {
           debugPrint(jsonData["token"]);
-          _storage.setUser(jsonData["token"], role);
+          _storage.setUser(jsonData["token"]);
           return ResponseModel.success(message: jsonData["message"]);
         } else {
           return ResponseModel.error(message: jsonData["message"]);
@@ -44,7 +44,7 @@ class UserService with ServiceMixin {
         Map<String, dynamic> jsonData = jsonDecode(res);
         if (jsonData["status"] == true) {
           debugPrint(jsonData["token"]);
-          _storage.setUser(jsonData["token"], "user");
+          _storage.setUser(jsonData["token"]);
           return ResponseModel.success(message: jsonData["message"]);
         } else {
           return ResponseModel.error(message: jsonData["message"]);

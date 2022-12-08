@@ -25,10 +25,9 @@ class Storage {
     await pref.setBool("showOnboarding", false);
   }
 
-  Future<void> setUser(String tokenVal, String role) async {
+  Future<void> setUser(String tokenVal) async {
     debugPrint(tokenVal);
     await pref.setString("token", tokenVal);
-    await pref.setString("role", role);
     await pref.setBool("isLoggedIn", true);
   }
 

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:ret_cat/core/constance/style.dart';
+import 'package:ret_cat/core/enum/api_status.dart';
+import 'package:ret_cat/core/model/leave/leave_application_mode.dart';
+import 'package:ret_cat/core/view_model/home/home_view_modal.dart';
 import 'package:ret_cat/ui/shared/ui_comp_mixin.dart';
 import 'package:ret_cat/ui/shared/ui_helpers.dart';
 import 'package:ret_cat/ui/widgets/custom/custom_button.dart';
@@ -15,10 +19,17 @@ class LeaveApplicationView extends StatefulWidget {
 }
 
 class _LeaveApplicationViewState extends State<LeaveApplicationView> with UiCompMixin {
+  late final HomeViewModal _homeViewModal;
   final DateFormat _dateFormat = DateFormat("yyyy-MM-dd");
   final _startDateNfy = ValueNotifier<DateTime?>(null);
   final _endDateNfy = ValueNotifier<DateTime?>(null);
   final TextEditingController _reason = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _homeViewModal = context.read<HomeViewModal>();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +72,7 @@ class _LeaveApplicationViewState extends State<LeaveApplicationView> with UiComp
                         height: 35,
                         text: "Select start date",
                         onTap: () async {
-                          final pickedDate = await datePickerModel();
+                          final pickedDate = await datePickerModel(context);
                           if (pickedDate != null) {
                             _startDateNfy.value = pickedDate;
                           }
@@ -97,7 +108,7 @@ class _LeaveApplicationViewState extends State<LeaveApplicationView> with UiComp
                         width: 180,
                         height: 35,
                         onTap: () async {
-                          final endDate = await datePickerModel();
+                          final endDate = await datePickerModel(context);
                           if (endDate != null) {
                             _endDateNfy.value = endDate;
                           }
@@ -133,6 +144,21 @@ class _LeaveApplicationViewState extends State<LeaveApplicationView> with UiComp
                 showErrorMessage("Leave reason required");
                 return;
               }
+              final res = _homeViewModal.submitLeaveApplication(
+                LeaveApplicationModel(
+                  startDate: _startDateNfy.value!,
+                  endDate: _endDateNfy.value!,
+                  leaveReason: _reason.text.trim(),
+                ),
+              );
+              res.then((value) {
+                if (value.status == ApiStatus.success) {
+                  showSuccessMessage(value.message);
+                  Navigator.of(context).pop();
+                } else {
+                  showErrorMessage(value.message);
+                }
+              });
             },
           ),
         ],
@@ -140,13 +166,4 @@ class _LeaveApplicationViewState extends State<LeaveApplicationView> with UiComp
     );
   }
 
-  Future<DateTime?> datePickerModel() async {
-    final now = DateTime.now();
-    return await showDatePicker(
-      context: context,
-      initialDate: now,
-      firstDate: now,
-      lastDate: DateTime(now.year + 5, now.month, now.day),
-    );
-  }
 }

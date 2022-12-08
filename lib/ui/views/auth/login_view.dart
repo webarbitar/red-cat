@@ -25,12 +25,10 @@ class _LoginViewState extends State<LoginView> with UiCompMixin, ValidatorMixin 
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  bool _checkBox = false;
 
   @override
   void initState() {
     super.initState();
-
     _authViewModal = context.read<AuthViewModel>();
   }
 
@@ -159,14 +157,6 @@ class _LoginViewState extends State<LoginView> with UiCompMixin, ValidatorMixin 
                             ),
 
                             UIHelper.verticalSpaceMedium,
-                            Checkbox(
-                                value: _checkBox,
-                                onChanged: (val) {
-                                  setState(() {
-                                    _checkBox = val!;
-                                  });
-                                }),
-                            UIHelper.verticalSpaceMedium,
                             CustomButton(
                               text: "Login",
                               borderRadius: BorderRadius.circular(20),
@@ -176,11 +166,10 @@ class _LoginViewState extends State<LoginView> with UiCompMixin, ValidatorMixin 
                                   final res = _authViewModal.loginUser(
                                     _email.text.trim(),
                                     _password.text.trim(),
-                                    role: _checkBox ? "agent" : "user",
                                   );
                                   res.then((value) async {
                                     if (value.status == ApiStatus.success) {
-                                      context.read<UserViewModel>().fetchUserProfile();
+                                      context.read<UserViewModel>().fetchUserProfile(notify: true);
                                       await context.read<HomeViewModal>().checkAttendanceStatus();
                                       Navigation.instance.goBack();
                                       Navigation.instance.navigateAndRemoveUntil("/home");

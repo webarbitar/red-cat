@@ -26,16 +26,16 @@ class MyApp extends StatelessWidget {
           primarySwatch: primaryColor,
           textTheme: GoogleFonts.montserratTextTheme(Theme.of(context).textTheme),
           iconTheme: const IconThemeData(color: Colors.white),
-          appBarTheme: const AppBarTheme(
+          appBarTheme:  AppBarTheme(
             backgroundColor: primaryColor,
-            systemOverlayStyle: SystemUiOverlayStyle(
+            systemOverlayStyle: const SystemUiOverlayStyle(
               statusBarIconBrightness: Brightness.light,
               statusBarColor: primaryColor,
             ),
-            iconTheme: IconThemeData(
+            iconTheme: const IconThemeData(
               color: Colors.white,
             ),
-            titleTextStyle: TextStyle(
+            titleTextStyle: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Colors.white,

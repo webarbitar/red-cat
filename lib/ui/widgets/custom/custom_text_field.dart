@@ -74,8 +74,14 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    const borderStyle = OutlineInputBorder(
+      borderSide: BorderSide(color: Color(0xFFF38D93)),
+      borderRadius: BorderRadius.all(Radius.circular(8)),
+    );
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: widget.minLine != null ? 12 : 2),
+      padding: widget.needDecoration
+          ? EdgeInsets.symmetric(horizontal: 12, vertical: widget.minLine != null ? 12 : 2)
+          : null,
       decoration: widget.needDecoration
           ? BoxDecoration(
               color: widget.color ?? Colors.white,
@@ -90,13 +96,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 ),
               ],
             )
-          : BoxDecoration(
-              color: widget.color ?? Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: primaryColor.shade200),
-            ),
+          : null,
+
+      // BoxDecoration(
+      //         color: widget.color ?? Colors.white,
+      //         borderRadius: BorderRadius.circular(8),
+      //         border: Border.all(color: primaryColor.shade200),
+      //       ),
       child: SizedBox(
-        height: widget.minLine != null ? null : widget.height,
+        height: widget.minLine != null
+            ? null
+            : widget.needDecoration
+                ? widget.height
+                : null,
         child: Center(
           child: TextFormField(
             controller: widget.controller,
@@ -113,21 +125,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
             decoration: InputDecoration(
               suffixIcon: widget.obscure ? _buildObscureAction() : null,
               prefixIcon: widget.prefixIcon,
-              // border: InputBorder.none,
-              enabledBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.transparent),
-              ),
-              focusedBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.transparent),
-              ),
-              border: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.transparent),
-              ),
-              disabledBorder: InputBorder.none,
+              border: widget.needDecoration ? InputBorder.none : borderStyle,
+              enabledBorder: borderStyle,
+              focusedBorder: borderStyle,
+              disabledBorder: borderStyle,
               hintText: widget.hint,
               labelText: widget.labelText,
-              contentPadding: EdgeInsets.zero,
-              isDense: true,
+              contentPadding: widget.needDecoration
+                  ? EdgeInsets.zero
+                  : const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 8,
+                    ),
+              isDense: widget.needDecoration,
               errorStyle: const TextStyle(height: 0),
               hintStyle: widget.hintStyle ??
                   TextStyle(

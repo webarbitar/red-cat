@@ -27,8 +27,8 @@ class AuthViewModel extends BaseViewModel {
   // }
   //
 
-  Future<ResponseModel> loginUser(String phone, String password, {String role = "user"}) async {
-    final res = _userService.loginUser({'phone': phone, 'password': password}, role);
+  Future<ResponseModel> loginUser(String phone, String password) async {
+    final res = _userService.loginUser({'phone': phone, 'password': password});
     return res;
   }
 

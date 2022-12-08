@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ret_cat/core/model/attendance/check_in_out_model.dart';
+import 'package:ret_cat/core/model/leave/leave_application_mode.dart';
 
 import '../../../ui/shared/navigation/navigation.dart';
 import '../../../ui/views/auth/permission_handler_page.dart';
@@ -37,9 +38,13 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
 
   LatLng currentLatLng = const LatLng(22.5726, 88.3639);
 
+  List<LeaveApplicationModel> _leaveApplications = [];
+
   late PermissionStatus _permissionStatus = PermissionStatus.denied;
 
   List<NotificationModel> get notifications => _notifications;
+
+  List<LeaveApplicationModel> get leaveApplications => _leaveApplications;
 
   String get attendanceStatus => _attendanceStatus;
 
@@ -126,7 +131,7 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
       return Future.error('Location services are disabled.');
     }
 
-    return await Geolocator.getCurrentPosition();
+    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
   }
 
   // Future<ResponseModel<ReverseGeocodeModel>> fetchAddressFromGeocode(LatLng latLng) async {
@@ -138,7 +143,7 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
     List<Placemark> placemark = await placemarkFromCoordinates(latLng.latitude, latLng.longitude);
     Placemark place = placemark[0];
 
-    return '${place.name} ${place.subLocality},${place.locality},${place.country},${place.postalCode}';
+    return '${place.name} ${place.subLocality}, ${place.locality}, ${place.country}, ${place.postalCode}';
   }
 
   Future<ResponseModel> checkInCheckOutAttendance(String type,
@@ -162,6 +167,42 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
 
   Future<ResponseModel> updateUserLocation(Map<String, String> data) async {
     final res = await _homeService.updateUserLocation(data);
+    return res;
+  }
+
+  Future<ResponseModel> submitLeaveApplication(LeaveApplicationModel data) async {
+    final res = await _homeService.submitLeaveApplication(data.toMap());
+
+    return res;
+  }
+
+  Future<ResponseModel> fetchSubmittedLeaveApplication() async {
+    final res = await _homeService.fetchSubmittedLeaveApplications();
+    if (res.status == ApiStatus.success) {
+      _leaveApplications = res.data ?? [];
+    }
+    return res;
+  }
+
+  Future<ResponseModel> submitMorningSalesReport(Map<String, String> data) async {
+    final res = await _homeService.submitMorningSalesReport(data);
+
+    return res;
+  }
+
+  Future<ResponseModel> submitEveningSalesReport(Map<String, String> data) async {
+    final res = await _homeService.submitEveningSalesReport(data);
+
+    return res;
+  }
+
+  Future<ResponseModel> submitManagementSalesReport(Map<String, String> data) async {
+    final res = await _homeService.submitManagementSalesReport(data);
+
+    return res;
+  }
+  Future<ResponseModel> submitMarketVisit(Map<String, String> data, String image) async {
+    final res = await _homeService.submitMarketVisit(data, image);
 
     return res;
   }

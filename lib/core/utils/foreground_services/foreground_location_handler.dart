@@ -6,7 +6,6 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:ret_cat/core/enum/api_status.dart';
-import 'package:ret_cat/core/model/address/reverse_geocode_model.dart';
 import 'package:ret_cat/core/model/response_model.dart';
 import 'package:ret_cat/core/services/home/home_service.dart';
 import 'package:ret_cat/core/services/map/map_service.dart';
@@ -55,7 +54,7 @@ class ForegroundLocationHandler extends TaskHandler {
     Position pos;
     ResponseModel res;
     _timer = Timer.periodic(const Duration(minutes: 15), (Timer t) async {
-      pos = await Geolocator.getCurrentPosition();
+      pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
       res = await MapService().fetchAddressFromGeocode(
         position: LatLng(pos.latitude, pos.longitude),
       );

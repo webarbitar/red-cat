@@ -6,15 +6,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:ret_cat/core/utils/storage/storage.dart';
+import 'package:ret_cat/core/view_model/user/user_view_model.dart';
 import 'package:ret_cat/ui/shared/ui_comp_mixin.dart';
 import 'package:ret_cat/ui/shared/ui_helpers.dart';
 import 'package:ret_cat/ui/views/attendance/check_in_check_out_view.dart';
-import 'package:ret_cat/ui/views/home/drawer/drawer_view.dart';
 import 'package:ret_cat/ui/views/home/notification_view.dart';
 import 'package:ret_cat/ui/widgets/custom/custom_button.dart';
 
 import '../../../core/constance/style.dart';
 import '../../../core/view_model/home/home_view_modal.dart';
+import '../drawer/drawer_view.dart';
 
 class HomeView extends StatefulWidget {
   final int? pageIndex;
@@ -34,7 +35,6 @@ class _HomeViewState extends State<HomeView> with UiCompMixin {
   void initState() {
     super.initState();
     _homeViewModal = context.read<HomeViewModal>();
-
     initLocation();
   }
 
@@ -69,15 +69,100 @@ class _HomeViewState extends State<HomeView> with UiCompMixin {
             drawer: const DrawerView(),
             resizeToAvoidBottomInset: false,
             backgroundColor: backgroundColor,
-            body: Builder(
-              builder: (context) {
-                switch (Storage.instance.role) {
-                  case "agent":
-                    return _buildAgentView();
-                  default:
-                    return _buildUserView();
-                }
-              },
+            body: Stack(
+              children: [
+                SizedBox(
+                  height: double.maxFinite,
+                  width: double.maxFinite,
+                  child: Center(
+                    child: Image.asset(
+                      "assets/images/mcop-logo.png",
+                      height: 240,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: backgroundColor.withOpacity(0.92),
+                    ),
+                    child: Consumer2<HomeViewModal, UserViewModel>(
+                      builder: (context, model, userModel, _) {
+                        return SingleChildScrollView(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              UIHelper.verticalSpaceLarge,
+                              Center(
+                                child: SizedBox(
+                                  width: 120,
+                                  child: CustomButton(
+                                    text: model.attendanceStatus.isNotEmpty &&
+                                            model.attendanceStatus != "checkOut"
+                                        ? "Check Out"
+                                        : "Check In",
+                                    textStyle: const TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    onTap: () {
+                                      if (model.attendanceStatus != "checkOut") {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => CheckInCheckOutView(
+                                                type: model.attendanceStatus.isNotEmpty &&
+                                                        model.attendanceStatus != "checkOut"
+                                                    ? "checkOut"
+                                                    : "checkIn"),
+                                          ),
+                                        );
+                                      } else {
+                                        showErrorMessage("Attendance for today already submitted");
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                              UIHelper.verticalSpaceMedium,
+                              const Text(
+                                "Check In/Out",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: const LinearProgressIndicator(
+                                  value: 0.5,
+                                  minHeight: 6,
+                                ),
+                              ),
+                              UIHelper.verticalSpaceMedium,
+                              UIHelper.verticalSpaceMedium,
+                              if (userModel.user?.role == "Supervisor")
+                                buildLabel("User Attendances",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    )),
+                              if (userModel.user?.role == "Supervisor") UIHelper.verticalSpaceSmall,
+                              if (userModel.user?.role == "Supervisor") _buildSupervisedUserView(),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -174,101 +259,15 @@ class _HomeViewState extends State<HomeView> with UiCompMixin {
     );
   }
 
-  _buildUserView() {
-    return Stack(
-      children: [
-        SizedBox(
-          height: double.maxFinite,
-          width: double.maxFinite,
-          child: Center(
-            child: Image.asset(
-              "assets/images/mcop-logo.png",
-              height: 240,
-            ),
-          ),
-        ),
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Color.fromRGBO(255, 255, 255, 0.92),
-            ),
-            child: Consumer<HomeViewModal>(
-              builder: (context, model, _) {
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      UIHelper.verticalSpaceLarge,
-                      Center(
-                        child: SizedBox(
-                          width: 120,
-                          child: CustomButton(
-                            text: model.attendanceStatus.isNotEmpty &&
-                                    model.attendanceStatus != "checkOut"
-                                ? "Check Out"
-                                : "Check In",
-                            textStyle: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            onTap: () {
-                              if (model.attendanceStatus != "checkOut") {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => CheckInCheckOutView(
-                                        type: model.attendanceStatus.isNotEmpty &&
-                                                model.attendanceStatus != "checkOut"
-                                            ? "checkOut"
-                                            : "checkIn"),
-                                  ),
-                                );
-                              } else {
-                                showErrorMessage("Attendance for today already submitted");
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                      UIHelper.verticalSpaceMedium,
-                      const Text(
-                        "Check In/Out",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: const LinearProgressIndicator(
-                          value: 0.5,
-                          minHeight: 6,
-                        ),
-                      )
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  _buildAgentView() {
-    return ListView(
-      padding: const EdgeInsets.all(14),
+  _buildSupervisedUserView() {
+    return Column(
       children: [
         Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
