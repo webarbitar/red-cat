@@ -6,6 +6,7 @@ import 'package:ret_cat/core/model/leave/leave_application_mode.dart';
 
 import '../../constance/end_points.dart';
 import '../../model/attendance/check_in_out_model.dart';
+import '../../model/dashboard/dashboard_model.dart';
 import '../../model/notification/notification_model.dart';
 import '../../model/response_model.dart';
 import '../../utils/storage/storage.dart';
@@ -45,7 +46,28 @@ class HomeService with ServiceMixin {
       case 200:
         final jsonData = jsonDecode(res);
         if (jsonData["status"] == 200) {
-          final data = NotificationModel.parseJsonList(jsonData["data"]);
+          final data = NotificationModel.parseJsonList(jsonData["data"]??[]);
+          return ResponseModel.success(message: jsonData["message"], data: data);
+        } else {
+          return ResponseModel.error(message: jsonData["message"]);
+        }
+      default:
+        return streamErrorResponse(response);
+    }
+  }
+
+  Future<ResponseModel<DashboardModel>> fetchDashboardCount() async {
+    var request = http.Request('GET', parseUri(dashboard));
+    request.headers.addAll({'Authorization': 'Bearer ${_storage.token}'});
+
+    http.StreamedResponse response = await request.send();
+    final res = await response.stream.bytesToString();
+    debugPrint(res);
+    switch (response.statusCode) {
+      case 200:
+        final jsonData = jsonDecode(res);
+        if (jsonData["status"] == 200) {
+          final data = DashboardModel.fromJson(jsonData["data"]);
           return ResponseModel.success(message: jsonData["message"], data: data);
         } else {
           return ResponseModel.error(message: jsonData["message"]);

@@ -25,7 +25,7 @@ class UserModel {
         image = json['avatar'] ?? "",
         avatar = json["avatar"] ?? "",
         role = json["role"] ?? "",
-        users = parseJsonList(json["users"] ?? []),
+        users = parseJsonList(json["dependent_users"] ?? []),
         createdAt = DateTime.parse(json['created_at']),
         updatedAt = DateTime.parse(json['updated_at']);
 

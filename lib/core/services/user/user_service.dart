@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:ret_cat/core/model/attendance/attendance_log_model.dart';
+import 'package:ret_cat/core/model/attendance/attendance_model.dart';
 import 'package:ret_cat/core/model/user/user_model.dart';
 
 import '../../constance/end_points.dart';
@@ -94,6 +96,47 @@ class UserService with ServiceMixin {
           return ResponseModel.success(message: jsonData["message"]);
         } else {
           return ResponseModel.error(message: jsonData["error"] ?? jsonData["message"]);
+        }
+      default:
+        return streamErrorResponse(response);
+    }
+  }
+
+  Future<ResponseModel<List<AttendanceModel>>> fetchSupervisedAttendances() async {
+    var request = http.Request('GET', parseUri(supervisedAttendance));
+    request.headers.addAll({'Authorization': 'Bearer ${_storage.token}'});
+    http.StreamedResponse response = await request.send();
+    final res = await response.stream.bytesToString();
+    debugPrint(res);
+    switch (response.statusCode) {
+      case 200:
+        Map<String, dynamic> jsonData = jsonDecode(res);
+        if (jsonData["status"] == 200) {
+          var data = AttendanceModel.parseJsonList(jsonData["data"] ?? []);
+          return ResponseModel.success(message: jsonData["message"], data: data);
+        } else {
+          return ResponseModel.error(message: jsonData["message"]);
+        }
+      default:
+        return streamErrorResponse(response);
+    }
+  }
+
+  Future<ResponseModel<List<AttendanceLogModel>>> fetchAttendanceLogs(String userId) async {
+    var request = http.MultipartRequest('POST', parseUri(attendanceLogs));
+    request.headers.addAll({'Authorization': 'Bearer ${_storage.token}'});
+    request.fields.addAll({'id': userId});
+    http.StreamedResponse response = await request.send();
+    final res = await response.stream.bytesToString();
+    debugPrint(res);
+    switch (response.statusCode) {
+      case 200:
+        Map<String, dynamic> jsonData = jsonDecode(res);
+        if (jsonData["status"]) {
+          var data = AttendanceLogModel.parseJsonList(jsonData["data"] ?? []);
+          return ResponseModel.success(message: jsonData["message"], data: data);
+        } else {
+          return ResponseModel.error(message: jsonData["message"]);
         }
       default:
         return streamErrorResponse(response);

@@ -187,7 +187,7 @@ class _SignupViewState extends State<SignupView> with UiCompMixin, ValidatorMixi
                                 ));
                                 res.then((value) async {
                                   if (value.status == ApiStatus.success) {
-                                    context.read<UserViewModel>().fetchUserProfile();
+                                    await context.read<UserViewModel>().fetchUserProfile();
                                     await context.read<HomeViewModal>().checkAttendanceStatus();
                                     Navigation.instance.goBack();
                                     showSuccessMessage(value.message);

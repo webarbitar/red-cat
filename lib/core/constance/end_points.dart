@@ -10,6 +10,11 @@ const checkStatus = "$baseUrl/checkinstatus";
 const checkIn = "$baseUrl/checkin";
 const checkOut = "$baseUrl/checkout";
 const locationLog = "$baseUrl/locationlog";
+const supervisedAttendance = "$baseUrl/users-attendence-details";
+const attendanceLogs = "$baseUrl/user-log-details";
+
+///  ======== Dashboard ========
+const dashboard = "$baseUrl/dashboard";
 
 ///  ======== Notification ========
 const notification = "$baseUrl/notifications";

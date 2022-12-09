@@ -169,7 +169,7 @@ class _LoginViewState extends State<LoginView> with UiCompMixin, ValidatorMixin 
                                   );
                                   res.then((value) async {
                                     if (value.status == ApiStatus.success) {
-                                      context.read<UserViewModel>().fetchUserProfile(notify: true);
+                                      await context.read<UserViewModel>().fetchUserProfile(notify: true);
                                       await context.read<HomeViewModal>().checkAttendanceStatus();
                                       Navigation.instance.goBack();
                                       Navigation.instance.navigateAndRemoveUntil("/home");

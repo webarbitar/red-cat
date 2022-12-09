@@ -5,11 +5,9 @@ import 'dart:isolate';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:ret_cat/core/enum/api_status.dart';
-import 'package:ret_cat/core/model/response_model.dart';
 import 'package:ret_cat/core/services/home/home_service.dart';
-import 'package:ret_cat/core/services/map/map_service.dart';
 import 'package:ret_cat/core/utils/storage/storage.dart';
+import 'package:ret_cat/core/view_model/home/home_view_modal.dart';
 
 class ForegroundLocationHandler extends TaskHandler {
   Timer? _timer;
@@ -52,19 +50,18 @@ class ForegroundLocationHandler extends TaskHandler {
 
   void updateUserLocation() {
     Position pos;
-    ResponseModel res;
+    String address = "N/A";
     _timer = Timer.periodic(const Duration(minutes: 15), (Timer t) async {
-      pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
-      res = await MapService().fetchAddressFromGeocode(
-        position: LatLng(pos.latitude, pos.longitude),
+      pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.bestForNavigation,
+        forceAndroidLocationManager: true,
       );
-      if (res.status == ApiStatus.success) {
-        _homeService!.updateUserLocation({
-          'address': res.data!.displayName,
-          'lat': "${pos.latitude}",
-          'lng': '${pos.longitude}'
-        });
-      }
+      address = await HomeViewModal().fetchAddressFromGeocode(LatLng(pos.latitude, pos.longitude));
+      _homeService!.updateUserLocation({
+        'address': address,
+        'lat': "${pos.latitude}",
+        'lng': '${pos.longitude}',
+      });
     });
   }
 

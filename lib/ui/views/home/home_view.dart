@@ -5,7 +5,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:ret_cat/core/enum/api_status.dart';
+import 'package:ret_cat/core/model/user/user_model.dart';
 import 'package:ret_cat/core/utils/storage/storage.dart';
+import 'package:ret_cat/core/utils/string_extension.dart';
 import 'package:ret_cat/core/view_model/user/user_view_model.dart';
 import 'package:ret_cat/ui/shared/ui_comp_mixin.dart';
 import 'package:ret_cat/ui/shared/ui_helpers.dart';
@@ -15,6 +18,7 @@ import 'package:ret_cat/ui/widgets/custom/custom_button.dart';
 
 import '../../../core/constance/style.dart';
 import '../../../core/view_model/home/home_view_modal.dart';
+import '../../widgets/loader_widget.dart';
 import '../drawer/drawer_view.dart';
 
 class HomeView extends StatefulWidget {
@@ -28,6 +32,7 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> with UiCompMixin {
   late final HomeViewModal _homeViewModal;
+  late final UserViewModel _userViewModel;
   String dummyImage =
       "http://webarbiter.in/redcat/public/uploads/checkincheckout/checkin_image_20221205091623.jpg";
 
@@ -35,7 +40,20 @@ class _HomeViewState extends State<HomeView> with UiCompMixin {
   void initState() {
     super.initState();
     _homeViewModal = context.read<HomeViewModal>();
+    _userViewModel = context.read();
     initLocation();
+    initHomeModule();
+  }
+
+  void initHomeModule() async {
+    if (_userViewModel.user?.role == "Supervisor") {
+      busyNfy.value = true;
+      await _homeViewModal.fetchDashboardCount();
+      final res = _userViewModel.fetchSupervisedAttendances(notify: true);
+      res.then((value) {
+        busyNfy.value = false;
+      });
+    }
   }
 
   @override
@@ -69,101 +87,221 @@ class _HomeViewState extends State<HomeView> with UiCompMixin {
             drawer: const DrawerView(),
             resizeToAvoidBottomInset: false,
             backgroundColor: backgroundColor,
-            body: Stack(
-              children: [
-                SizedBox(
-                  height: double.maxFinite,
-                  width: double.maxFinite,
-                  child: Center(
-                    child: Image.asset(
-                      "assets/images/mcop-logo.png",
-                      height: 240,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: backgroundColor.withOpacity(0.92),
-                    ),
-                    child: Consumer2<HomeViewModal, UserViewModel>(
-                      builder: (context, model, userModel, _) {
-                        return SingleChildScrollView(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              UIHelper.verticalSpaceLarge,
-                              Center(
-                                child: SizedBox(
-                                  width: 120,
-                                  child: CustomButton(
-                                    text: model.attendanceStatus.isNotEmpty &&
-                                            model.attendanceStatus != "checkOut"
-                                        ? "Check Out"
-                                        : "Check In",
-                                    textStyle: const TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    onTap: () {
-                                      if (model.attendanceStatus != "checkOut") {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (context) => CheckInCheckOutView(
-                                                type: model.attendanceStatus.isNotEmpty &&
-                                                        model.attendanceStatus != "checkOut"
-                                                    ? "checkOut"
-                                                    : "checkIn"),
-                                          ),
-                                        );
-                                      } else {
-                                        showErrorMessage("Attendance for today already submitted");
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ),
-                              UIHelper.verticalSpaceMedium,
-                              const Text(
-                                "Check In/Out",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(6),
-                                child: const LinearProgressIndicator(
-                                  value: 0.5,
-                                  minHeight: 6,
-                                ),
-                              ),
-                              UIHelper.verticalSpaceMedium,
-                              UIHelper.verticalSpaceMedium,
-                              if (userModel.user?.role == "Supervisor")
-                                buildLabel("User Attendances",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    )),
-                              if (userModel.user?.role == "Supervisor") UIHelper.verticalSpaceSmall,
-                              if (userModel.user?.role == "Supervisor") _buildSupervisedUserView(),
-                            ],
+            body: ValueListenableBuilder<bool>(
+                valueListenable: busyNfy,
+                builder: (context, busy, _) {
+                  if (busy) {
+                    return const Center(
+                      child: LoaderWidget(
+                        color: primaryColor,
+                      ),
+                    );
+                  }
+                  return Stack(
+                    children: [
+                      SizedBox(
+                        height: double.maxFinite,
+                        width: double.maxFinite,
+                        child: Center(
+                          child: Image.asset(
+                            "assets/images/mcop-logo.png",
+                            height: 240,
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: backgroundColor.withOpacity(0.92),
+                          ),
+                          child: Consumer2<HomeViewModal, UserViewModel>(
+                            builder: (context, model, userModel, _) {
+                              return SingleChildScrollView(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    UIHelper.verticalSpaceLarge,
+                                    Center(
+                                      child: SizedBox(
+                                        width: 120,
+                                        child: CustomButton(
+                                          text: model.attendanceStatus.isNotEmpty &&
+                                                  model.attendanceStatus != "checkOut"
+                                              ? "Check Out"
+                                              : "Check In",
+                                          textStyle: const TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          onTap: () {
+                                            if (model.attendanceStatus != "checkOut") {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (context) => CheckInCheckOutView(
+                                                      type: model.attendanceStatus.isNotEmpty &&
+                                                              model.attendanceStatus != "checkOut"
+                                                          ? "checkOut"
+                                                          : "checkIn"),
+                                                ),
+                                              );
+                                            } else {
+                                              showErrorMessage(
+                                                  "Attendance for today already submitted");
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    UIHelper.verticalSpaceMedium,
+                                    const Text(
+                                      "Check In/Out",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(6),
+                                      child: const LinearProgressIndicator(
+                                        value: 0.5,
+                                        minHeight: 6,
+                                      ),
+                                    ),
+                                    UIHelper.verticalSpaceMedium,
+                                    UIHelper.verticalSpaceMedium,
+                                    if (userModel.user?.role == "Supervisor")
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          buildLabel("Dashboard",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w600,
+                                              )),
+                                          UIHelper.verticalSpaceSmall,
+                                          LayoutBuilder(builder: (context, constraint) {
+                                            double width = constraint.maxWidth / 3 - 8;
+                                            return Wrap(
+                                              spacing: 12,
+                                              runSpacing: 12,
+                                              children: [
+                                                Container(
+                                                  width: width,
+                                                  height: 90,
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.green.shade100,
+                                                      borderRadius: BorderRadius.circular(8)),
+                                                  padding: const EdgeInsets.all(8),
+                                                  child: Column(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      Text(
+                                                        "${_homeViewModal.dashboard?.dependentUsers}",
+                                                        style: GoogleFonts.dosis(
+                                                          fontSize: 16,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      const Text(
+                                                        "User Under Supervision",
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                        textAlign: TextAlign.center,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Container(
+                                                  width: width,
+                                                  height: 90,
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.red.shade100,
+                                                      borderRadius: BorderRadius.circular(8)),
+                                                  padding: const EdgeInsets.all(8),
+                                                  child: Column(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      Text(
+                                                        "${_homeViewModal.dashboard?.attendenceReports}",
+                                                        style: GoogleFonts.dosis(
+                                                          fontSize: 16,
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      const Text(
+                                                        "Attendance",
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                        textAlign: TextAlign.center,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Container(
+                                                  width: width,
+                                                  height: 90,
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.yellow.shade200,
+                                                      borderRadius: BorderRadius.circular(8)),
+                                                  padding: const EdgeInsets.all(8),
+                                                  child: Column(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      Text(
+                                                        "${_homeViewModal.dashboard?.leaves}",
+                                                        style: GoogleFonts.dosis(
+                                                          fontSize: 16,
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      const Text(
+                                                        "Leave",
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                        textAlign: TextAlign.center,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          }),
+                                          UIHelper.verticalSpaceMedium,
+                                          buildLabel("User Attendances",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w600,
+                                              )),
+                                          UIHelper.verticalSpaceSmall,
+                                          _buildSupervisedUserView(),
+                                        ],
+                                      )
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
           ),
         ),
       ),
@@ -262,146 +400,192 @@ class _HomeViewState extends State<HomeView> with UiCompMixin {
   _buildSupervisedUserView() {
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "ID: REPORT-295834",
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text("Piyali Adhikari",
+        ..._userViewModel.supUserAttendances.map((data) {
+          UserModel user =
+              _userViewModel.user!.users.singleWhere((element) => element.id == data.userId);
+          return Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  data.uniqueId,
                   style: GoogleFonts.poppins(
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
-                  )),
-              UIHelper.verticalSpaceSmall,
-              buildLabel(
-                'Sign In',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              UIHelper.verticalSpaceSmall,
-              Row(
-                children: [
-                  Image.network(dummyImage, width: 70),
-                  UIHelper.horizontalSpaceMedium,
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "3 December,2022",
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Barasat City, Barasat, Barasat - I, West Bengal, 700124, India",
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-              UIHelper.verticalSpaceSmall,
-              const Divider(),
-              buildLabel(
-                'Sign Out',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                Text(user.name.capitalize(),
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    )),
+                UIHelper.verticalSpaceSmall,
+                buildLabel(
+                  'Sign In',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              UIHelper.verticalSpaceSmall,
-              Row(
-                children: [
-                  Image.network(dummyImage, width: 70),
-                  UIHelper.horizontalSpaceMedium,
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "3 December,2022",
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
+                UIHelper.verticalSpaceSmall,
+                Row(
+                  children: [
+                    Image.network(dummyImage, width: 70),
+                    UIHelper.horizontalSpaceMedium,
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            data.signInTime,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Barasat City, Barasat, Barasat - I, West Bengal, 700124, India",
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
+                          const SizedBox(height: 4),
+                          Text(
+                            data.signInAddress,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-              UIHelper.verticalSpaceMedium,
-              CustomButton(
-                text: "View Logs",
-                onTap: _showLogsDialog,
-              ),
-            ],
-          ),
-        )
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+                UIHelper.verticalSpaceSmall,
+                const Divider(),
+                buildLabel(
+                  'Sign Out',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                UIHelper.verticalSpaceSmall,
+                Row(
+                  children: [
+                    Image.network(dummyImage, width: 70),
+                    UIHelper.horizontalSpaceMedium,
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            data.signOutTime,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            data.signOutAdd,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+                UIHelper.verticalSpaceMedium,
+                CustomButton(
+                  text: "View Logs",
+                  onTap: () {
+                    _showLogsDialog(data.userId);
+                  },
+                ),
+              ],
+            ),
+          );
+        })
       ],
     );
   }
 
-  void _showLogsDialog() {
+  void _showLogsDialog(int userId) {
     showDialog(
         context: context,
         builder: (context) {
-          return Scaffold(
-            appBar: AppBar(elevation: 0.0, title: const Text("Attendance Logs")),
-            body: ListView(
-              children: [
-                ...List.generate(4, (index) {
-                  return const Card(
-                    child: ListTile(
-                      title: Text("Barasat City, Barasat, Barasat - I, West Bengal, 700124, India"),
-                      subtitle: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            "3 December,2022 18:11:25",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                })
-              ],
-            ),
-          );
+          return AttendanceLogView(userId: userId);
         });
   }
 
   @override
   void dispose() {
     super.dispose();
+  }
+}
+
+class AttendanceLogView extends StatefulWidget {
+  final int userId;
+
+  const AttendanceLogView({Key? key, required this.userId}) : super(key: key);
+
+  @override
+  State<AttendanceLogView> createState() => _AttendanceLogViewState();
+}
+
+class _AttendanceLogViewState extends State<AttendanceLogView> with UiCompMixin {
+  @override
+  void initState() {
+    super.initState();
+    busyNfy.value = true;
+    context.read<UserViewModel>().fetchAttendanceLogs(widget.userId).then((value) {
+      busyNfy.value = false;
+      if (value.status != ApiStatus.success) {
+        showErrorMessage(value.message);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(elevation: 0.0, title: const Text("Attendance Logs")),
+      body: ValueListenableBuilder<bool>(
+          valueListenable: busyNfy,
+          builder: (context, busy, _) {
+            if (busy) {
+              return const LoaderWidget(color: primaryColor);
+            }
+            return Consumer<UserViewModel>(builder: (context, model, _) {
+              if (model.attendanceLogs.isEmpty) {
+                return const Center(child: Text("No logs report found!"));
+              }
+              return ListView(
+                children: [
+                  ...model.attendanceLogs.map((data) {
+                    return Card(
+                      child: ListTile(
+                        title: Text(data.location),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              data.dateOfAttendence,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  })
+                ],
+              );
+            });
+          }),
+    );
   }
 }

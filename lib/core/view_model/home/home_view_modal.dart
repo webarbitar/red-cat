@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ret_cat/core/model/attendance/check_in_out_model.dart';
+import 'package:ret_cat/core/model/dashboard/dashboard_model.dart';
 import 'package:ret_cat/core/model/leave/leave_application_mode.dart';
 
 import '../../../ui/shared/navigation/navigation.dart';
@@ -30,6 +31,8 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
     _mapService = value;
   }
 
+  DashboardModel? _dashboard;
+
   List<NotificationModel> _notifications = [];
 
   String _attendanceStatus = "";
@@ -41,6 +44,8 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
   List<LeaveApplicationModel> _leaveApplications = [];
 
   late PermissionStatus _permissionStatus = PermissionStatus.denied;
+
+  DashboardModel? get dashboard => _dashboard;
 
   List<NotificationModel> get notifications => _notifications;
 
@@ -67,6 +72,15 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
       _attendanceStatus = "";
     }
     notifyListeners();
+    return res;
+  }
+
+  Future<ResponseModel> fetchDashboardCount() async {
+    final res = await _homeService.fetchDashboardCount();
+    if (res.status == ApiStatus.success) {
+      _dashboard = res.data;
+      notifyListeners();
+    }
     return res;
   }
 
@@ -131,7 +145,10 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
       return Future.error('Location services are disabled.');
     }
 
-    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.bestForNavigation,
+      forceAndroidLocationManager: true,
+    );
   }
 
   // Future<ResponseModel<ReverseGeocodeModel>> fetchAddressFromGeocode(LatLng latLng) async {
@@ -140,10 +157,12 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
   // }
 
   Future<String> fetchAddressFromGeocode(LatLng latLng) async {
-    List<Placemark> placemark = await placemarkFromCoordinates(latLng.latitude, latLng.longitude);
+    List<Placemark> placemark = await placemarkFromCoordinates(latLng.latitude, latLng.longitude,);
     Placemark place = placemark[0];
+    print(place.toString());
 
-    return '${place.name} ${place.subLocality}, ${place.locality}, ${place.country}, ${place.postalCode}';
+    return '${place.name != place.thoroughfare ? place.name : ""} ${place.street}, ${place.subThoroughfare} ${place.thoroughfare} ${place.subLocality}, ${place.locality}, ${place.country}, ${place.postalCode}'
+        .trim();
   }
 
   Future<ResponseModel> checkInCheckOutAttendance(String type,
@@ -201,6 +220,7 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
 
     return res;
   }
+
   Future<ResponseModel> submitMarketVisit(Map<String, String> data, String image) async {
     final res = await _homeService.submitMarketVisit(data, image);
 
