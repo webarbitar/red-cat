@@ -2,8 +2,6 @@ import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -31,7 +29,6 @@ class _MarketVisitPhotoViewState extends State<MarketVisitPhotoView> with UiComp
   final ImageCropper _cropper = ImageCropper();
   final ImagePicker _picker = ImagePicker();
   File? selfie;
-  Position? pos;
 
   @override
   void initState() {
@@ -43,12 +40,10 @@ class _MarketVisitPhotoViewState extends State<MarketVisitPhotoView> with UiComp
   void fetchCurrentLocation() async {
     busyNfy.value = true;
     try {
-      pos = await _homeViewModal.currentLocation();
-      final res = await _homeViewModal.fetchAddressFromGeocode(
-        LatLng(pos!.latitude, pos!.longitude),
-      );
-      // address = res.data;
-      _address.text = res;
+      final res = await _homeViewModal.fetchAddressFromGoogleGeocode(_homeViewModal.currentLatLng!);
+      _address.text = res.data!.formattedAddress;
+      // _address.text = res;
+      _homeViewModal.currentAddress = _address.text;
     } catch (e, trace) {
       debugPrintStack(stackTrace: trace, label: e.toString());
     }
@@ -98,13 +93,35 @@ class _MarketVisitPhotoViewState extends State<MarketVisitPhotoView> with UiComp
                     ),
                   ),
                   UIHelper.verticalSpaceMedium,
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      buildLabel("Visit Location"),
-                      TextButton(onPressed: fetchCurrentLocation, child: const Text("Update"))
-                    ],
-                  ),
+                  StreamBuilder<String>(
+                      stream: _homeViewModal.timerStream,
+                      builder: (context, snapshot) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            buildLabel("Market Address"),
+                            // if (_homeViewModal.timer == null)
+                            //   TextButton(
+                            //     style: TextButton.styleFrom(
+                            //         padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+                            //     onPressed: () {
+                            //       fetchCurrentLocation();
+                            //       _homeViewModal.initLocationStartTimer();
+                            //     },
+                            //     child: const Text("Refresh Location"),
+                            //   )
+                            // else
+                            //   Text(
+                            //     snapshot.data ?? "",
+                            //     style: GoogleFonts.poppins(
+                            //       fontSize: 13,
+                            //       fontWeight: FontWeight.w500,
+                            //     ),
+                            //   ),
+                          ],
+                        );
+                      }),
+                  UIHelper.verticalSpaceSmall,
                   CustomTextField(
                     hint: "type here",
                     controller: _address,
@@ -130,15 +147,15 @@ class _MarketVisitPhotoViewState extends State<MarketVisitPhotoView> with UiComp
                         showErrorMessage("Please upload the selfie");
                         return;
                       }
-                      if (pos == null) {
+                      if (_homeViewModal.currentLatLng == null) {
                         showErrorMessage("Location Required");
                         return;
                       }
                       loaderModal(context);
                       _homeViewModal.submitMarketVisit({
                         'address': _address.text.trim(),
-                        'lat': '${pos!.latitude}',
-                        'lng': '${pos!.longitude}',
+                        'lat': '${_homeViewModal.currentLatLng!.latitude}',
+                        'lng': '${_homeViewModal.currentLatLng!.longitude}',
                         'remarks': _remark.text.trim(),
                       }, selfie!.path).then((value) {
                         Navigator.of(context).pop();

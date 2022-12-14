@@ -4,30 +4,30 @@ import 'package:flutter/services.dart';
 const MaterialColor primaryColor = MaterialColor(
   _primaryColorValue,
   <int, Color>{
-    50: Color(0xFFFCE4E5),
-    100: Color(0xFFF8BABE),
-    200: Color(0xFFF38D93),
-    300: Color(0xFFEE5F67),
-    400: Color(0xFFEA3C47),
+    50: Color(0xFFF5E1E3),
+    100: Color(0xFFE6B5BA),
+    200: Color(0xFFD5848C),
+    300: Color(0xFFC4525E),
+    400: Color(0xFFB82D3C),
     500: Color(_primaryColorValue),
-    600: Color(0xFFE31722),
-    700: Color(0xFFDF131C),
-    800: Color(0xFFDB0F17),
-    900: Color(0xFFD5080D),
+    600: Color(0xFFA40716),
+    700: Color(0xFF9A0612),
+    800: Color(0xFF91040E),
+    900: Color(0xFF800208),
   },
 );
-const int _primaryColorValue = 0xFFE61A26;
+const int _primaryColorValue = 0xFFAB0819;
 
 const MaterialColor primaryColorAccent = MaterialColor(
   _primaryColorAccentValue,
   <int, Color>{
-    100: Color(0xFFFFFEFE),
+    100: Color(0xFFFFADAF),
     200: Color(_primaryColorAccentValue),
-    400: Color(0xFFFF989A),
-    700: Color(0xFFFF7F81),
+    400: Color(0xFFFF474B),
+    700: Color(0xFFFF2E31),
   },
 );
-const int _primaryColorAccentValue = 0xFFFFCBCC;
+const int _primaryColorAccentValue = 0xFFFF7A7D;
 
 const mainColorGray = Color(0xfffafafa);
 const blackColorTitleBkg = Color(0xff202020);

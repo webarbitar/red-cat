@@ -7,7 +7,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:ret_cat/core/enum/api_status.dart';
 import 'package:ret_cat/core/model/user/user_model.dart';
-import 'package:ret_cat/core/utils/storage/storage.dart';
 import 'package:ret_cat/core/utils/string_extension.dart';
 import 'package:ret_cat/core/view_model/user/user_view_model.dart';
 import 'package:ret_cat/ui/shared/ui_comp_mixin.dart';
@@ -33,8 +32,6 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> with UiCompMixin {
   late final HomeViewModal _homeViewModal;
   late final UserViewModel _userViewModel;
-  String dummyImage =
-      "http://webarbiter.in/redcat/public/uploads/checkincheckout/checkin_image_20221205091623.jpg";
 
   @override
   void initState() {
@@ -344,6 +341,7 @@ class _HomeViewState extends State<HomeView> with UiCompMixin {
       requestBackgroundLocationPermission();
     }
 
+    modal.initLocationListener();
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
     // Position position = await Geolocator.getCurrentPosition();
@@ -419,23 +417,27 @@ class _HomeViewState extends State<HomeView> with UiCompMixin {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                const Divider(
+                  thickness: 2,
+                ),
                 Text(user.name.capitalize(),
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.montserrat(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     )),
                 UIHelper.verticalSpaceSmall,
                 buildLabel(
                   'Sign In',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    color: Colors.black54,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 UIHelper.verticalSpaceSmall,
                 Row(
                   children: [
-                    Image.network(dummyImage, width: 70),
+                    Image.network("${data.imagePath}/${data.signInImage}", width: 70),
                     UIHelper.horizontalSpaceMedium,
                     Flexible(
                       child: Column(
@@ -463,39 +465,41 @@ class _HomeViewState extends State<HomeView> with UiCompMixin {
                 const Divider(),
                 buildLabel(
                   'Sign Out',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    color: Colors.black54,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 UIHelper.verticalSpaceSmall,
-                Row(
-                  children: [
-                    Image.network(dummyImage, width: 70),
-                    UIHelper.horizontalSpaceMedium,
-                    Flexible(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            data.signOutTime,
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
+                if (data.signOutImage.isNotEmpty)
+                  Row(
+                    children: [
+                      Image.network("${data.imagePath}/${data.signOutImage}", width: 70),
+                      UIHelper.horizontalSpaceMedium,
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              data.signOutTime,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            data.signOutAdd,
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
+                            const SizedBox(height: 4),
+                            Text(
+                              data.signOutAdd,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
-                UIHelper.verticalSpaceMedium,
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                if (data.signOutImage.isNotEmpty) UIHelper.verticalSpaceMedium,
                 CustomButton(
                   text: "View Logs",
                   onTap: () {

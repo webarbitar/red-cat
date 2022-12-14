@@ -41,7 +41,7 @@ dependencies:
   shared_preferences: ^2.0.15
   url_launcher: 6.0.9
   intl: ^0.17.0
-  geolocator: ^9.0.1
+  geolocator: ^9.0.2
   google_maps_flutter: ^2.2.0
   lottie: ^1.4.2
   timeago: ^3.3.0

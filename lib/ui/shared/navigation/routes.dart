@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ret_cat/ui/views/auth/signup_view.dart';
+import 'package:ret_cat/ui/views/drawer/attendance/my_attendance_view.dart';
 import 'package:ret_cat/ui/views/drawer/market_visit/market_visit_photo_view.dart';
+import 'package:ret_cat/ui/views/drawer/password/change_password_view.dart';
 import 'package:ret_cat/ui/views/drawer/sales_report/management_report_view.dart';
 import 'package:ret_cat/ui/views/user/profile_update_view.dart';
 import 'package:ret_cat/ui/views/user/profile_view.dart';
@@ -32,6 +34,12 @@ Route<dynamic> generateRoute(RouteSettings settings) {
 
     case '/profile-update':
       return FadeTransitionPageRouteBuilder(page: const ProfileUpdateView());
+
+    case '/forgot-password':
+      return FadeTransitionPageRouteBuilder(page: const ChangePasswordView());
+
+    case '/my-attendance':
+      return FadeTransitionPageRouteBuilder(page: const MyAttendanceView());
 
     case '/leave-application':
       return FadeTransitionPageRouteBuilder(page: const LeaveApplicationView());

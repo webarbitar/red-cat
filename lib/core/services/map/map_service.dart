@@ -8,30 +8,28 @@ import '../../../env.dart';
 import '../../constance/end_points.dart';
 import '../../enum/api_status.dart';
 import '../../model/address/geocode_address.dart';
-import '../../model/address/reverse_geocode_model.dart';
 import '../../model/response_model.dart';
 import '../service_mixin.dart';
 
 class MapService with ServiceMixin {
-  Future<ResponseModel<ReverseGeocodeModel>> fetchAddressFromGeocode(
-      {required LatLng position}) async {
-    Uri uri = parseUri("$mapGecode?format=json&lat=${position.latitude}&lon=${position.longitude}");
+  Future<ResponseModel<GeocodeAddress>> fetchAddressFromGeocode({required LatLng position}) async {
+    Uri uri =
+        parseUri("$mapGecode?latlng=${"${position.latitude},${position.longitude}"}&key=$mapToken");
     final res = await http.get(uri);
-    // log(res.body);
-    // try {
-    switch (res.statusCode) {
-      case 200:
-        final jsonData = jsonDecode(res.body);
-        log(res.body);
-
-        final data = ReverseGeocodeModel.fromJson(jsonData);
-        return ResponseModel.success(data: data);
-
-      default:
-        return errorResponse(res);
+    try {
+      switch (res.statusCode) {
+        case 200:
+          final jsonData = jsonDecode(res.body);
+          if (jsonData["status"] == "OK" && (jsonData["results"] as List).isNotEmpty) {
+            final data = GeocodeAddress.fromJson(jsonData["results"]);
+            return ResponseModel.success(data: data);
+          }
+          return ResponseModel.error(status: ApiStatus.error, message: ServiceMixin.ERROR_MESSAGE);
+        default:
+          return errorResponse(res);
+      }
+    } catch (ex) {
+      return exceptionResponse(ex);
     }
-    // } catch (ex) {
-    //   return exceptionResponse(ex);
-    // }
   }
 }

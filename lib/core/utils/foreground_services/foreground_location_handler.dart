@@ -51,11 +51,8 @@ class ForegroundLocationHandler extends TaskHandler {
   void updateUserLocation() {
     Position pos;
     String address = "N/A";
-    _timer = Timer.periodic(const Duration(minutes: 15), (Timer t) async {
-      pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.bestForNavigation,
-        forceAndroidLocationManager: true,
-      );
+    _timer = Timer.periodic(const Duration(minutes: 7), (Timer t) async {
+      pos = await Geolocator.getCurrentPosition(forceAndroidLocationManager: true);
       address = await HomeViewModal().fetchAddressFromGeocode(LatLng(pos.latitude, pos.longitude));
       _homeService!.updateUserLocation({
         'address': address,

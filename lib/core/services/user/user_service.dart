@@ -102,6 +102,26 @@ class UserService with ServiceMixin {
     }
   }
 
+  Future<ResponseModel<List<AttendanceModel>>> fetchMyAttendances() async {
+    var request = http.Request('GET', parseUri(myAttendance));
+    request.headers.addAll({'Authorization': 'Bearer ${_storage.token}'});
+    http.StreamedResponse response = await request.send();
+    final res = await response.stream.bytesToString();
+    debugPrint(res);
+    switch (response.statusCode) {
+      case 200:
+        Map<String, dynamic> jsonData = jsonDecode(res);
+        if (jsonData["status"] == 200) {
+          var data = AttendanceModel.parseJsonList(jsonData["data"] ?? []);
+          return ResponseModel.success(message: jsonData["message"], data: data);
+        } else {
+          return ResponseModel.error(message: jsonData["message"]);
+        }
+      default:
+        return streamErrorResponse(response);
+    }
+  }
+
   Future<ResponseModel<List<AttendanceModel>>> fetchSupervisedAttendances() async {
     var request = http.Request('GET', parseUri(supervisedAttendance));
     request.headers.addAll({'Authorization': 'Bearer ${_storage.token}'});
@@ -132,7 +152,29 @@ class UserService with ServiceMixin {
     switch (response.statusCode) {
       case 200:
         Map<String, dynamic> jsonData = jsonDecode(res);
-        if (jsonData["status"]) {
+        if (jsonData["status"] == 200) {
+          var data = AttendanceLogModel.parseJsonList(jsonData["data"] ?? []);
+          return ResponseModel.success(message: jsonData["message"], data: data);
+        } else {
+          return ResponseModel.error(message: jsonData["message"]);
+        }
+      default:
+        return streamErrorResponse(response);
+    }
+  }
+
+  Future<ResponseModel> changeUserPassword(Map<String, dynamic> data) async {
+    var request = http.Request('POST', parseUri(changePassword));
+    var headers = {'Content-Type': 'application/json'};
+    request.headers.addAll(headers);
+    request.body = jsonEncode(data);
+
+    http.StreamedResponse response = await request.send();
+    final res = await response.stream.bytesToString();
+    switch (response.statusCode) {
+      case 200:
+        Map<String, dynamic> jsonData = jsonDecode(res);
+        if (jsonData["status"] == 200) {
           var data = AttendanceLogModel.parseJsonList(jsonData["data"] ?? []);
           return ResponseModel.success(message: jsonData["message"], data: data);
         } else {

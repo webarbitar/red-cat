@@ -145,7 +145,9 @@ class _LoginViewState extends State<LoginView> with UiCompMixin, ValidatorMixin 
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigation.instance.navigate('/forgot-password');
+                                },
                                 child: Text(
                                   "Forgot Password?",
                                   style: GoogleFonts.montserrat(
@@ -169,7 +171,9 @@ class _LoginViewState extends State<LoginView> with UiCompMixin, ValidatorMixin 
                                   );
                                   res.then((value) async {
                                     if (value.status == ApiStatus.success) {
-                                      await context.read<UserViewModel>().fetchUserProfile(notify: true);
+                                      await context
+                                          .read<UserViewModel>()
+                                          .fetchUserProfile(notify: true);
                                       await context.read<HomeViewModal>().checkAttendanceStatus();
                                       Navigation.instance.goBack();
                                       Navigation.instance.navigateAndRemoveUntil("/home");

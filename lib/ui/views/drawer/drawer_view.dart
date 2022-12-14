@@ -20,7 +20,7 @@ class _DrawerViewState extends State<DrawerView> {
   Widget build(BuildContext context) {
     return Consumer<UserViewModel>(builder: (context, model, _) {
       return Drawer(
-        backgroundColor: primaryColor.shade900,
+        backgroundColor: primaryColor.shade600,
         child: Theme(
           data: ThemeData(
             expansionTileTheme: const ExpansionTileThemeData(
@@ -67,70 +67,80 @@ class _DrawerViewState extends State<DrawerView> {
                 leading: const Icon(Icons.account_box_outlined),
                 title: const Text("Account"),
               ),
-              const ListTile(
-                leading: Icon(Icons.assignment),
-                title: Text("Attendance"),
+              // ListTile(
+              //   onTap: () {
+              //     Navigation.instance.goBack();
+              //     Navigation.instance.navigate('/change-password');
+              //   },
+              //   leading: const Icon(Icons.lock_reset),
+              //   title: const Text("Change Password"),
+              // ),
+              ListTile(
+                onTap: () {
+                  Navigation.instance.goBack();
+                  Navigation.instance.navigate('/my-attendance');
+                },
+                leading: const Icon(Icons.assignment),
+                title: const Text("Attendance"),
               ),
-              if (model.user?.role == "Supervisor")
-                ExpansionTile(
-                  initiallyExpanded: false,
-                  leading: const Icon(Icons.graphic_eq),
-                  title: const Text("Sales Report"),
-                  children: [
-                    ListTile(
-                      onTap: () {
-                        Navigation.instance.goBack();
-                        Navigation.instance.navigate("/morning-report");
-                      },
-                      leading: const Icon(
-                        Icons.circle_outlined,
-                        size: 16,
-                      ),
-                      title: const Text("Morning Report"),
+              ExpansionTile(
+                initiallyExpanded: false,
+                leading: const Icon(Icons.graphic_eq),
+                title: const Text("Sales Report"),
+                children: [
+                  ListTile(
+                    onTap: () {
+                      Navigation.instance.goBack();
+                      Navigation.instance.navigate("/management-report", args: "SH");
+                    },
+                    leading: const Icon(
+                      Icons.circle_outlined,
+                      size: 16,
                     ),
-                    ListTile(
-                      onTap: () {
-                        Navigation.instance.goBack();
-                        Navigation.instance.navigate("/evening-report");
-                      },
-                      leading: const Icon(
-                        Icons.circle_outlined,
-                        size: 16,
-                      ),
-                      title: const Text("Evening Report"),
+                    title: const Text("SH Sales Report"),
+                  ),
+                  ListTile(
+                    onTap: () {
+                      Navigation.instance.goBack();
+                      Navigation.instance.navigate("/management-report", args: "ASM");
+                    },
+                    leading: const Icon(
+                      Icons.circle_outlined,
+                      size: 16,
                     ),
-                  ],
-                ),
-              if (model.user?.role == "Supervisor")
-                ExpansionTile(
-                  initiallyExpanded: false,
-                  leading: const FaIcon(FontAwesomeIcons.chartSimple),
-                  title: const Text("Management Report"),
-                  children: [
-                    ListTile(
-                      onTap: () {
-                        Navigation.instance.goBack();
-                        Navigation.instance.navigate("/management-report", args: "ASM");
-                      },
-                      leading: const Icon(
-                        Icons.circle_outlined,
-                        size: 16,
+                    title: const Text("ASM Sales Report"),
+                  ),
+                  ExpansionTile(
+                    initiallyExpanded: false,
+                    leading: const FaIcon(FontAwesomeIcons.chartSimple),
+                    title: const Text("TL/TSM Sales Report"),
+                    children: [
+                      ListTile(
+                        onTap: () {
+                          Navigation.instance.goBack();
+                          Navigation.instance.navigate("/morning-report");
+                        },
+                        leading: const Icon(
+                          Icons.circle_outlined,
+                          size: 16,
+                        ),
+                        title: const Text("Morning Report"),
                       ),
-                      title: const Text("ASM Sales Report"),
-                    ),
-                    ListTile(
-                      onTap: () {
-                        Navigation.instance.goBack();
-                        Navigation.instance.navigate("/management-report", args: "SH");
-                      },
-                      leading: const Icon(
-                        Icons.circle_outlined,
-                        size: 16,
+                      ListTile(
+                        onTap: () {
+                          Navigation.instance.goBack();
+                          Navigation.instance.navigate("/evening-report");
+                        },
+                        leading: const Icon(
+                          Icons.circle_outlined,
+                          size: 16,
+                        ),
+                        title: const Text("Evening Report"),
                       ),
-                      title: const Text("SH Sales Report"),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
+              ),
               ListTile(
                 onTap: () {
                   Navigation.instance.goBack();
@@ -139,15 +149,14 @@ class _DrawerViewState extends State<DrawerView> {
                 leading: const Icon(Icons.contact_mail_outlined),
                 title: const Text("Leave Application"),
               ),
-              if (model.user?.role == "Supervisor")
-                ListTile(
-                  onTap: () {
-                    Navigation.instance.goBack();
-                    Navigation.instance.navigate('/market-visit');
-                  },
-                  leading: const Icon(Icons.photo_camera_outlined),
-                  title: const Text("Market Visit Photo"),
-                ),
+              ListTile(
+                onTap: () {
+                  Navigation.instance.goBack();
+                  Navigation.instance.navigate('/market-visit');
+                },
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text("Market Visit Photo"),
+              ),
               // const ListTile(
               //   leading: Icon(Icons.shield),
               //   title: Text("Privacy Policy"),

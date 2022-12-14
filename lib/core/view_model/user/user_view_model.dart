@@ -16,10 +16,15 @@ class UserViewModel extends BaseViewModel {
 
   UserModel? _user;
 
+  List<AttendanceModel> _myAttendances = [];
+
   List<AttendanceModel> _supUserAttendances = [];
+
   List<AttendanceLogModel> _attendanceLogs = [];
 
   UserModel? get user => _user;
+
+  List<AttendanceModel> get myAttendances => _myAttendances;
 
   List<AttendanceModel> get supUserAttendances => _supUserAttendances;
 
@@ -44,6 +49,17 @@ class UserViewModel extends BaseViewModel {
     return res;
   }
 
+  Future<ResponseModel> fetchMyAttendances({bool notify = false}) async {
+    final res = await _userService.fetchMyAttendances();
+    if (res.status == ApiStatus.success) {
+      _myAttendances = res.data ?? [];
+    }
+    if (notify) {
+      notifyListeners();
+    }
+    return res;
+  }
+
   Future<ResponseModel> fetchSupervisedAttendances({bool notify = false}) async {
     final res = await _userService.fetchSupervisedAttendances();
     if (res.status == ApiStatus.success) {
@@ -57,12 +73,19 @@ class UserViewModel extends BaseViewModel {
 
   Future<ResponseModel> fetchAttendanceLogs(int userId, {bool notify = false}) async {
     final res = await _userService.fetchAttendanceLogs("$userId");
+    _attendanceLogs = [];
     if (res.status == ApiStatus.success) {
       _attendanceLogs = res.data ?? [];
     }
     if (notify) {
       notifyListeners();
     }
+    return res;
+  }
+
+  Future<ResponseModel> changeUserPassword(
+      {required String phone, required String password}) async {
+    final res = _userService.changeUserPassword({"mobile": phone, "password": password});
     return res;
   }
 }

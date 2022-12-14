@@ -209,6 +209,17 @@ class _ManagementReportViewState extends State<ManagementReportView>
             ),
             UIHelper.verticalSpaceMedium,
 
+            // ============ TGT Vs ACH ============
+            buildLabel("TGT Vs ACH"),
+            UIHelper.verticalSpaceSmall,
+            CustomTextField(
+              validator: emptyFieldValidation,
+              hint: "type here",
+              controller: _tgtVsAchCtrl,
+              needDecoration: false,
+            ),
+            UIHelper.verticalSpaceMedium,
+
             // ============ Width Of SS ============
             buildLabel("Width Of SS"),
             UIHelper.verticalSpaceSmall,
@@ -237,17 +248,7 @@ class _ManagementReportViewState extends State<ManagementReportView>
               controller: _widthOfDistribution2,
               needDecoration: false,
             ),
-            UIHelper.verticalSpaceMedium,
 
-            // ============ TGT Vs ACH ============
-            buildLabel("TGT Vs ACH"),
-            UIHelper.verticalSpaceSmall,
-            CustomTextField(
-              validator: emptyFieldValidation,
-              hint: "type here",
-              controller: _tgtVsAchCtrl,
-              needDecoration: false,
-            ),
             UIHelper.verticalSpaceMedium,
             UIHelper.verticalSpaceMedium,
             CustomButton(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -10,13 +12,13 @@ import 'package:ret_cat/core/model/leave/leave_application_mode.dart';
 import '../../../ui/shared/navigation/navigation.dart';
 import '../../../ui/views/auth/permission_handler_page.dart';
 import '../../enum/api_status.dart';
+import '../../model/address/geocode_address.dart';
 import '../../model/notification/notification_model.dart';
 import '../../model/response_model.dart';
 import '../../services/home/home_service.dart';
 import '../../services/map/map_service.dart';
 import '../../utils/foreground_services/foreground_notificaton_handler.dart';
 import '../../utils/permission/permission_handler_service.dart';
-import '../../utils/storage/storage.dart';
 import '../base_view_model.dart';
 
 class HomeViewModal extends BaseViewModel with PermissionHandlerService {
@@ -39,13 +41,27 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
 
   String currentAddress = "";
 
-  LatLng currentLatLng = const LatLng(22.5726, 88.3639);
+  LatLng? currentLatLng;
 
   List<LeaveApplicationModel> _leaveApplications = [];
 
   late PermissionStatus _permissionStatus = PermissionStatus.denied;
 
+  final StreamController<String> _timerController = StreamController.broadcast();
+
+  Timer? _timer;
+
+  static const _setting = LocationSettings(
+    accuracy: LocationAccuracy.best,
+    distanceFilter: 20,
+    timeLimit: Duration(seconds: 10),
+  );
+
   DashboardModel? get dashboard => _dashboard;
+
+  Timer? get timer => _timer;
+
+  Stream<String> get timerStream => _timerController.stream;
 
   List<NotificationModel> get notifications => _notifications;
 
@@ -56,6 +72,29 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
   set attendanceStatus(String value) {
     _attendanceStatus = value;
     notifyListeners();
+  }
+
+  void initLocationStartTimer() {
+    int second = const Duration(minutes: 5).inSeconds;
+    print(second);
+    _timerController.sink.add("");
+    try {
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (second != 0) {
+          int min = (second ~/ 60).remainder(60);
+          int sec = second.remainder(60);
+          _timerController.sink.add("${"$min".padLeft(2, '0')}:${"$sec".padLeft(2, '0')}");
+          second--;
+        } else {
+          _timer?.cancel();
+          _timerController.sink.add("00:00");
+          _timer = null;
+        }
+      });
+    } catch (e) {
+      _timer?.cancel();
+      _timer = null;
+    }
   }
 
   Future<ResponseModel> checkAttendanceStatus() async {
@@ -123,44 +162,35 @@ class HomeViewModal extends BaseViewModel with PermissionHandlerService {
     }
   }
 
-  Future<void> myCurrentLocation() async {
-    await _checkLocationPermission();
-    bool serviceEnabled;
-    // Test if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
-    }
-
-    Position position = await Geolocator.getCurrentPosition();
-    await fetchLocation(LatLng(position.latitude, position.longitude), notify: false);
+  Future<void> initLocationListener() async {
+    Geolocator.getPositionStream(locationSettings: _setting).listen((pos) {
+      currentLatLng = LatLng(pos.latitude, pos.longitude);
+    });
   }
 
-  Future<Position> currentLocation() async {
-    await _checkLocationPermission();
-    bool serviceEnabled;
-    // Test if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
-    }
-
-    return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.bestForNavigation,
-      forceAndroidLocationManager: true,
-    );
-  }
-
-  // Future<ResponseModel<ReverseGeocodeModel>> fetchAddressFromGeocode(LatLng latLng) async {
-  //   final res = await _mapService.fetchAddressFromGeocode(position: latLng);
-  //   return res;
+  // Future<Position> currentLocation() async {
+  //   await _checkLocationPermission();
+  //   bool serviceEnabled;
+  //   // Test if location services are enabled.
+  //   serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  //   if (!serviceEnabled) {
+  //     return Future.error('Location services are disabled.');
+  //   }
+  //
+  //   return await Geolocator.getCurrentPosition();
   // }
 
-  Future<String> fetchAddressFromGeocode(LatLng latLng) async {
-    List<Placemark> placemark = await placemarkFromCoordinates(latLng.latitude, latLng.longitude,);
-    Placemark place = placemark[0];
-    print(place.toString());
+  Future<ResponseModel<GeocodeAddress>> fetchAddressFromGoogleGeocode(LatLng latLng) async {
+    final res = await _mapService.fetchAddressFromGeocode(position: latLng);
+    return res;
+  }
 
+  Future<String> fetchAddressFromGeocode(LatLng latLng) async {
+    List<Placemark> placemark = await placemarkFromCoordinates(
+      latLng.latitude,
+      latLng.longitude,
+    );
+    Placemark place = placemark[0];
     return '${place.name != place.thoroughfare ? place.name : ""} ${place.street}, ${place.subThoroughfare} ${place.thoroughfare} ${place.subLocality}, ${place.locality}, ${place.country}, ${place.postalCode}'
         .trim();
   }

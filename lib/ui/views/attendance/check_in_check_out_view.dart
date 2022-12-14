@@ -3,14 +3,14 @@ import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:ret_cat/core/constance/style.dart';
 import 'package:ret_cat/core/enum/api_status.dart';
-import 'package:ret_cat/core/model/address/reverse_geocode_model.dart';
 import 'package:ret_cat/core/model/attendance/check_in_out_model.dart';
+import 'package:ret_cat/core/utils/string_extension.dart';
 import 'package:ret_cat/core/view_model/home/home_view_modal.dart';
 import 'package:ret_cat/ui/shared/ui_comp_mixin.dart';
 import 'package:ret_cat/ui/shared/ui_helpers.dart';
@@ -31,7 +31,6 @@ class _CheckInCheckOutViewState extends State<CheckInCheckOutView> with UiCompMi
   final ImageCropper _cropper = ImageCropper();
   final ImagePicker _picker = ImagePicker();
   File? selfie;
-  Position? pos;
 
   // ReverseGeocodeModel? address;
   String? address;
@@ -46,12 +45,10 @@ class _CheckInCheckOutViewState extends State<CheckInCheckOutView> with UiCompMi
   void fetchCurrentLocation() async {
     busyNfy.value = true;
     try {
-      pos = await _homeViewModal.currentLocation();
-      final res = await _homeViewModal.fetchAddressFromGeocode(
-        LatLng(pos!.latitude, pos!.longitude),
-      );
-      // address = res.data;
-      address = res;
+      final res = await _homeViewModal.fetchAddressFromGoogleGeocode(_homeViewModal.currentLatLng!);
+      address = res.data!.formattedAddress;
+      // address = res;
+      _homeViewModal.currentAddress = address!;
     } catch (e, trace) {
       debugPrintStack(stackTrace: trace, label: e.toString());
     }
@@ -101,13 +98,49 @@ class _CheckInCheckOutViewState extends State<CheckInCheckOutView> with UiCompMi
                     ),
                   ),
                   UIHelper.verticalSpaceMedium,
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      buildLabel("${widget.type == "checkIn" ? "Check In" : "Check Out"} Location"),
-                      TextButton(onPressed: fetchCurrentLocation, child: const Text("Update"))
-                    ],
-                  ),
+                  StreamBuilder<String>(
+                      stream: _homeViewModal.timerStream,
+                      builder: (context, snapshot) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            buildLabel(
+                                "${widget.type == "checkIn" ? "Check In" : "Check Out"} Location"),
+                            // if (_homeViewModal.timer == null)
+                            //   TextButton(
+                            //     style: TextButton.styleFrom(
+                            //         padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+                            //     onPressed: () {
+                            //       fetchCurrentLocation();
+                            //       // _homeViewModal.initLocationStartTimer();
+                            //     },
+                            //     child: const Text("Refresh Location"),
+                            //   )
+                            // else
+                            //   Text(
+                            //     snapshot.data ?? "",
+                            //     style: GoogleFonts.poppins(
+                            //       fontSize: 13,
+                            //       fontWeight: FontWeight.w500,
+                            //     ),
+                            //   ),
+
+                            // FutureBuilder<LocationAccuracyStatus>(
+                            //   future: Geolocator.getLocationAccuracy(),
+                            //   builder: (context, snapshot) {
+                            //     return Text(
+                            //       snapshot.data?.name.capitalize() ?? "",
+                            //       style: GoogleFonts.poppins(
+                            //         fontSize: 13,
+                            //         fontWeight: FontWeight.w500,
+                            //       ),
+                            //     );
+                            //   },
+                            // ),
+                          ],
+                        );
+                      }),
+                  UIHelper.verticalSpaceSmall,
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -125,7 +158,7 @@ class _CheckInCheckOutViewState extends State<CheckInCheckOutView> with UiCompMi
                         showErrorMessage("Please upload the selfie");
                         return;
                       }
-                      if (pos == null) {
+                      if (_homeViewModal.currentLatLng == null) {
                         showErrorMessage("Location Required");
                         return;
                       }
@@ -135,8 +168,8 @@ class _CheckInCheckOutViewState extends State<CheckInCheckOutView> with UiCompMi
                         data: CheckInOutModel(
                           userImage: selfie!.path,
                           address: address ?? "",
-                          latitude: pos!.latitude,
-                          longitude: pos!.longitude,
+                          latitude: _homeViewModal.currentLatLng!.latitude,
+                          longitude: _homeViewModal.currentLatLng!.longitude,
                         ),
                       );
                       res.then((value) {

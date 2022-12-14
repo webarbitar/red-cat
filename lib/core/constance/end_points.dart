@@ -4,12 +4,14 @@ import '../../env.dart';
 const login = "$baseUrl/login";
 const register = "$baseUrl/signup";
 const profile = "$baseUrl/profile";
+const changePassword = "$baseUrl/forgotpw";
 
 ///  ======== Attendance ========
 const checkStatus = "$baseUrl/checkinstatus";
 const checkIn = "$baseUrl/checkin";
 const checkOut = "$baseUrl/checkout";
 const locationLog = "$baseUrl/locationlog";
+const myAttendance = "$baseUrl/own-attendence-details";
 const supervisedAttendance = "$baseUrl/users-attendence-details";
 const attendanceLogs = "$baseUrl/user-log-details";
 
@@ -33,4 +35,4 @@ const managementReport = "$baseUrl/management-sales-report";
 const marketVisit = "$baseUrl/register_market_visit";
 
 ///  ======== Google Map Url ========
-const mapGecode = "$mapBaseUrl/reverse";
+const mapGecode = "$mapBaseUrl/geocode/json";

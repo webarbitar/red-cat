@@ -16,6 +16,7 @@ class AttendanceModel {
   String createdAt;
   String updatedAt;
   String? deletedAt;
+  String imagePath = "http://webarbiter.in/redcat/public/uploads/checkincheckout";
 
   AttendanceModel.fromJson(Map<String, dynamic> json)
       : id = json['id'],
@@ -27,11 +28,11 @@ class AttendanceModel {
         signInLat = json['sign_in_lat'],
         signInLong = json['sign_in_long'],
         signInTime = json['sign_in_time'],
-        signOutImage = json['sign_out_image'],
-        signOutAdd = json['sign_out_add'],
-        signOutLat = json['sign_out_lat'],
-        signOutLong = json['sign_out_long'],
-        signOutTime = json['sign_out_time'],
+        signOutImage = json['sign_out_image'] ?? "",
+        signOutAdd = json['sign_out_add'] ?? "",
+        signOutLat = json['sign_out_lat'] ?? "",
+        signOutLong = json['sign_out_long'] ?? "",
+        signOutTime = json['sign_out_time'] ?? "",
         createdAt = json['created_at'],
         updatedAt = json['updated_at'],
         deletedAt = json['deleted_at'];
